@@ -1,0 +1,14 @@
+.cell { min-width: 0; min-height: 0; position: relative; overflow: hidden; display: grid; place-items: center; background: #444e46; }
+.fog { background: #141819; }
+.wall { background: #252c2d; box-shadow: inset 0 1px #353d3c; }
+.floor, .start, .exit, .player, .ghost { background: #63705b; }
+.cell svg { position: absolute; inset: 12.5%; width: 75%; height: 75%; display: block; shape-rendering: crispEdges; }
+.ghost svg { inset: 0; width: 100%; height: 100%; }
+.player { background: #7b876d; }
+.playerMark { width: 49%; height: 49%; background: #f2f1ce; box-shadow: 0 0 9px #e5edb54d; }
+.ghost { color: #ffc0a8; background: #604e45; }
+.exit { color: #e0ffa9; background: #546d45; }
+.startMark { width: 25%; height: 25%; border: 1px solid #a7b495; }
+.warning { color: #ffe3ce; background: #a35c48; animation: warning-pulse .32s steps(2, end) infinite; }
+@keyframes warning-pulse { 50% { background: #754033; } }
+@media (prefers-reduced-motion: reduce) { .warning { animation: none; } }
