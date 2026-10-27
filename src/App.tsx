@@ -116,6 +116,27 @@ function App() {
     }
   }, [screen])
 
+  useEffect(() => {
+    if (screen !== 'game') return
+    const root = document.documentElement
+    root.classList.add('game-active')
+
+    // React touch listeners may be passive. Use a native, non-passive listener
+    // so Safari cannot turn a gameplay swipe into page scrolling or bounce.
+    // Touch events keep their original target even if a finger leaves the maze.
+    const preventGameplayScroll = (event: TouchEvent) => {
+      if (event.target instanceof Element &&
+          event.target.closest('.maze, .direction-button') && event.cancelable) {
+        event.preventDefault()
+      }
+    }
+    document.addEventListener('touchmove', preventGameplayScroll, { passive: false, capture: true })
+    return () => {
+      root.classList.remove('game-active')
+      document.removeEventListener('touchmove', preventGameplayScroll, true)
+    }
+  }, [screen])
+
   function startSwipe(event: PointerEvent<HTMLDivElement>) {
     if (!event.isPrimary || event.button !== 0 || game.status === 'won' || game.status === 'lost') return
     event.preventDefault()
@@ -128,6 +149,7 @@ function App() {
   function moveSwipe(event: PointerEvent<HTMLDivElement>) {
     const gesture = swipe.current
     if (!gesture || event.pointerId !== gesture.pointerId) return
+    if (event.cancelable) event.preventDefault()
     const dx = event.clientX - gesture.x
     const dy = event.clientY - gesture.y
     // Ignore taps and finger jitter. Once a direction is chosen, holding the

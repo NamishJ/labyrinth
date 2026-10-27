@@ -8,6 +8,8 @@
 :root { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #d7d7d4; background: #08090b; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; color-scheme: dark; }
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; }
+/* Prevent scroll chaining, pull-to-refresh, and rubber-band bounce during play. */
+html.game-active, html.game-active body { overscroll-behavior: none; }
 button { font: inherit; cursor: pointer; }
 button:disabled { cursor: default; }
 button, summary { -webkit-tap-highlight-color: transparent; }

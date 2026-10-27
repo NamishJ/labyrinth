@@ -7,7 +7,7 @@
 .play-button:hover { color: #fff; transform: translateY(-2px); }
 .home-footer { position: absolute; bottom: 27px; color: #494c4d; font-size: 9px; letter-spacing: 4px; animation: appear 2s both 1s; }
 @keyframes appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.game-screen { min-height: 100svh; padding: 32px 24px 24px; }
+.game-screen { overscroll-behavior: none; overflow-anchor: none; min-height: 100svh; padding: 32px 24px 24px; }
 .game-shell { width: min(100%, 588px, max(320px, calc(100svh - 300px))); margin: auto; container-type: inline-size; }
 .game-header { display: grid; grid-template-columns: 90px 1fr 90px; align-items: center; margin-bottom: 24px; }
 .game-title { text-align: center; color: #eee; font-size: clamp(12px, 4.25cqw, 25px); line-height: 1.6; margin: 0; }
@@ -18,7 +18,7 @@
 .board-meta { display: flex; justify-content: space-between; color: #717776; font-size: 9px; letter-spacing: 1.8px; margin: 0 1px 12px; }
 .board-frame { position: relative; padding: 7px; border: 1px solid #303634; background: #111415; box-shadow: 0 12px 55px #0005; transition: border-color .2s; }
 .board-frame.was-caught { border-color: #b46159; }
-.maze { touch-action: none; user-select: none; -webkit-user-select: none; display: grid; grid-auto-rows: minmax(0, 1fr); aspect-ratio: 1; gap: 1px; background: #101314; outline: none; }
+.maze { touch-action: none; overscroll-behavior: none; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; display: grid; grid-auto-rows: minmax(0, 1fr); aspect-ratio: 1; gap: 1px; background: #101314; outline: none; }
 .maze:focus-visible { outline: 1px solid #7b856a; outline-offset: 8px; }
 .game-stats { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #24292a; padding: 24px 0 21px; }
 .lives-stat, .timer-stat { display: flex; align-items: center; gap: 15px; }
