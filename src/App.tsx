@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import type { PointerEvent } from 'react'
 import './App.css'
 import MazeCell from './MazeCell'
 import Leaderboard from './LeaderboardScreen'
@@ -30,10 +31,11 @@ function App() {
   const [clock, setClock] = useState(0)
   const heldKeys = useRef<string[]>([])
   const pointerDirection = useRef<Direction | null>(null)
+  const swipe = useRef<{ pointerId: number; x: number; y: number } | null>(null)
   const boardRef = useRef<HTMLDivElement>(null)
   const resultRef = useRef<HTMLButtonElement>(null)
 
-  function clearInput() { heldKeys.current = []; pointerDirection.current = null }
+  function clearInput() { heldKeys.current = []; pointerDirection.current = null; swipe.current = null }
   function newMaze(mode: GameMode = game.mode, minutes: RaceMinutes = game.raceMinutes) {
     clearInput()
     setSaved(false)
@@ -71,13 +73,14 @@ function App() {
     if (game.status === 'won' || game.status === 'lost') {
       heldKeys.current = []
       pointerDirection.current = null
+      swipe.current = null
       resultRef.current?.focus()
     }
   }, [game.status])
 
   useEffect(() => {
     if (screen !== 'game') return
-    const resetInput = () => { heldKeys.current = []; pointerDirection.current = null }
+    const resetInput = () => { heldKeys.current = []; pointerDirection.current = null; swipe.current = null }
     const down = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase()
       const direction = KEYS[key]
@@ -112,6 +115,38 @@ function App() {
       document.removeEventListener('visibilitychange', resetInput)
     }
   }, [screen])
+
+  function startSwipe(event: PointerEvent<HTMLDivElement>) {
+    if (!event.isPrimary || event.button !== 0 || game.status === 'won' || game.status === 'lost') return
+    event.preventDefault()
+    event.currentTarget.focus({ preventScroll: true })
+    event.currentTarget.setPointerCapture(event.pointerId)
+    swipe.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY }
+    pointerDirection.current = null
+  }
+
+  function moveSwipe(event: PointerEvent<HTMLDivElement>) {
+    const gesture = swipe.current
+    if (!gesture || event.pointerId !== gesture.pointerId) return
+    const dx = event.clientX - gesture.x
+    const dy = event.clientY - gesture.y
+    // Ignore taps and finger jitter. Once a direction is chosen, holding the
+    // finger down uses the same movement cadence as holding an arrow key.
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 18) return
+    const direction: Direction = Math.abs(dx) > Math.abs(dy)
+      ? dx > 0 ? 'right' : 'left'
+      : dy > 0 ? 'down' : 'up'
+    swipe.current = { ...gesture, x: event.clientX, y: event.clientY }
+    pointerDirection.current = direction
+    const now = performance.now()
+    setGame(previous => movePlayer(previous, direction, now))
+  }
+
+  function endSwipe(event: PointerEvent<HTMLDivElement>) {
+    if (event.pointerId !== swipe.current?.pointerId) return
+    swipe.current = null
+    pointerDirection.current = null
+  }
 
   if (screen === 'leaderboard') return <Leaderboard onHome={() => setScreen('home')}/>
 
@@ -161,7 +196,7 @@ function App() {
       </header>
       <div className="board-meta"><span>{game.mode === 'normal' ? 'THE UNKNOWN' : `MAZE ${game.solved + 1} · ${game.solved} SOLVED`}</span><span>{explored}% REVEALED</span></div>
       <div className={`board-frame ${game.hitUntil > clock ? 'was-caught' : ''}`}>
-        <div className="maze" ref={boardRef} tabIndex={0} role="group" aria-label="Maze. Use arrow keys or W A S D to move. Find the exit on the bottom row." style={{ gridTemplateColumns: `repeat(${SIZE}, 1fr)` }}>
+        <div className="maze" ref={boardRef} tabIndex={0} role="group" aria-label="Maze. Swipe, or use arrow keys or W A S D to move. Swipe and hold to keep moving; lift to stop. Find the exit on the bottom row." onPointerDown={startSwipe} onPointerMove={moveSwipe} onPointerUp={endSwipe} onPointerCancel={endSwipe} onLostPointerCapture={endSwipe} style={{ gridTemplateColumns: `repeat(${SIZE}, 1fr)` }}>
           {game.maze.walls.flatMap((row, r) => row.map((wall, c) => {
             const position: Position = [r, c]
             const key = keyOf(position)
@@ -204,6 +239,7 @@ function App() {
       </div>
       <p className={`game-message ${warning ? 'danger' : ''}`} role="status">{finished ? (game.status === 'won' ? 'Exit reached.' : game.endReason === 'timeout' ? 'Time is up.' : 'No lives remaining.') : message}</p>
       <div className="game-instructions"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> <span className="or">/</span> <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> to move</span><span className="exit-legend"><i/> Bottom edge = exit</span></div>
+      <p className="swipe-hint">Swipe the maze to move · Hold to keep going · Lift to stop</p>
       <div className="touch-controls" aria-label="Movement controls">
         {(['up', 'left', 'down', 'right'] as Direction[]).map((direction, i) => <button key={direction} className={`direction-button direction-${direction}`} aria-label={`Move ${direction}`} disabled={finished} onPointerDown={event => {
           event.preventDefault()
